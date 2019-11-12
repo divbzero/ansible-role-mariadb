@@ -1,0 +1,5 @@
+mariadb_admin_user: "{{ ansible_user }}"
+mariadb_admin_password: "{{ lookup('password', 'credentials/mariadb/' + mariadb_admin_user + '_password') }}"
+mariadb_databases: []
+mariadb_my_cnf: my.cnf.j2
+mariadb_unix_socket: /var/run/mysqld/mysqld.sock

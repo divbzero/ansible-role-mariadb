@@ -1,0 +1,35 @@
+- name: update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+  become: yes
+- name: install server
+  apt: name=mariadb-server
+  become: yes
+- name: install cli client
+  apt: name=mycli
+  become: yes
+- name: install python client
+  apt: name=python-pymysql
+  become: yes
+- name: databases
+  mysql_db:
+    login_unix_socket: "{{ mariadb_unix_socket }}"
+    name: "{{ item.database|mandatory }}"
+  loop: "{{ mariadb_databases }}"
+  become: yes
+- name: database users 
+  mysql_user:
+    login_unix_socket: "{{ mariadb_unix_socket }}"
+    name: "{{ item.user|default(item.database) }}"
+    password: "{{ item.password|default(lookup('password', 'credentials/mariadb/' + item.user|default(item.database) + '_password')) }}"
+    priv: "{{ item.database }}.*:ALL"
+  loop: "{{ mariadb_databases }}"
+  become: yes
+- name: admin user
+  mysql_user:
+    login_unix_socket: "{{ mariadb_unix_socket }}"
+    name: "{{ mariadb_admin_user }}"
+    password: "{{ mariadb_admin_password }}"
+    priv: "*.*:ALL"
+  become: yes
+- name: client config
+  template: src={{ mariadb_my_cnf }} dest=~/.my.cnf mode=0600
